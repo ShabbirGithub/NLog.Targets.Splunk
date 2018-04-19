@@ -18,6 +18,12 @@ namespace NLog.Targets.Splunk
 
         public int RetriesOnError { get; set; } = 0;
 
+        public string Index { get; set; } = null;
+
+        public string Source { get; set; } = null;
+
+        public string SourceType { get; set; } = null;
+
         protected override void InitializeTarget()
         {
             base.InitializeTarget();
@@ -35,7 +41,7 @@ namespace NLog.Targets.Splunk
             _hecSender = new HttpEventCollectorSender(
                 ServerUrl,                                                                          // Splunk HEC URL
                 Token,                                                                              // Splunk HEC token *GUID*
-                new HttpEventCollectorEventInfo.Metadata(null, null, "_json", GetMachineName()),    // Metadata
+                new HttpEventCollectorEventInfo.Metadata(Index, Source, (SourceType ?? "_json"), GetMachineName()),    // Metadata
                 HttpEventCollectorSender.SendMode.Sequential,                                       // Sequential sending to keep message in order
                 0,                                                                                  // BatchInterval - Set to 0 to disable
                 0,                                                                                  // BatchSizeBytes - Set to 0 to disable
@@ -59,12 +65,13 @@ namespace NLog.Targets.Splunk
             }
 
             // Build metaData
-            var metaData = new HttpEventCollectorEventInfo.Metadata(null, logEventInfo.LoggerName, "_json", GetMachineName());
+            var metaData = new HttpEventCollectorEventInfo.Metadata(Index, (Source ?? logEventInfo.LoggerName), (SourceType ?? logEventInfo.LoggerName), GetMachineName());
 
             // Build properties object and add standard values
             var properties = new Dictionary<String, object>
             {
-                {"Source", logEventInfo.LoggerName},
+                {"Source", (Source ?? logEventInfo.LoggerName) },
+                {"SourceType", (SourceType ?? logEventInfo.LoggerName) },
                 { "Host", GetMachineName()}
             };
 
